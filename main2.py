@@ -21,7 +21,7 @@ from utils import ImageBlur, ImagePixelate, ImageRectangle
 
 
 
-def main(argv):
+def main():
     INPUT_DIR = "_in"
     OUTPUT_DIR = "_out"
     OUTPUT_DIR_NEW = ""
@@ -38,21 +38,34 @@ def main(argv):
     CENSORING_MODE = "RECTANGLE"        # [RECTANGLE, BLUR, PIXELATE]
     mFrequency = 0
 
-    mParser = argparse.ArgumentParser()
-    mParser.add_argument("-m", "--mode", help="Mode. Options: RECTANGLE|BLUR|PIXELATE")
-    mParser.add_argument("-f", "--frequency", help="(optional) Frequency.")
-    mParser.add_argument("-o", "--output", help="(optional) Output path")
-    mParser.add_argument("-i", "--input", help="(optional) Input path")
-    args = mParser.parse_args()
-
-    if args.mode:
-        CENSORING_MODE = args.mode
-    elif args.frequency:
-        mFrequency = int(args.frequency)
-    elif args.output:
-        INPUT_DIR = args.output
-    elif args.input:
-        OUTPUT_DIR = args.intput
+    print("===========================================\n")
+    while True:
+        tRep = input(f"| Choose censoring mode (skip to use RECTANGLE): {' | '.join(list(FREQUENCIES.keys()))}\n> ")
+        if tRep:
+            if tRep not in list(FREQUENCIES.keys()):
+                continue
+            CENSORING_MODE = tRep
+            tRep = ""
+        break
+    while True:
+        tRep = input(f"| Number of censoring frequencies (skip to use default value): \n> ")
+        if tRep:
+            try:
+                mFrequency = int(tRep)
+                tRep = ""
+            except ValueError:
+                print("|!| Invalid value\n")
+                tRep = ""
+                continue
+        break
+    tRep = input(f"| Output path (skip to use default value): \n> ")
+    if tRep:
+        OUTPUT_DIR = tRep
+        tRep = ""
+    tRep = input(f"| Input path (skip to use default value): \n> ")
+    if tRep:
+        INPUT_DIR = tRep
+        tRep = ""
     
     if mFrequency < 1:
         mFrequency = FREQUENCIES[CENSORING_MODE]
@@ -65,6 +78,7 @@ def main(argv):
 
     mImageDescriptions = {}
 
+
     # Scan for default dir
     tRawFileNames = [tFileName for tFileName in listdir(Path(__file__).parent.absolute())]
     if "_in" not in tRawFileNames:
@@ -74,7 +88,7 @@ def main(argv):
 
     # Import all images
     mRawFileNames = [tFileName for tFileName in listdir(INPUT_DIR) if (isfile(join(INPUT_DIR, tFileName)) and (tFileName.endswith(".jpg") or tFileName.endswith(".png")))]
-    mLogger.info(f"=======================================")
+    mLogger.info(f"===========================================")
     mLogger.info(f"| Found: {len(mRawFileNames)} images")
     if not mRawFileNames:
         return
@@ -120,4 +134,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
