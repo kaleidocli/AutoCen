@@ -1,0 +1,2 @@
+NudeNet == 2.0.6
+Pillow == 8.0.1
