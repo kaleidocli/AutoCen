@@ -14,7 +14,7 @@ import getopt
 from nudenet import NudeDetector
 from PIL import Image, ImageDraw, ImageFilter
 
-from utils import ImageBlur, ImagePixelate, ImageRectangle
+from utils import ImageCensoring, ImageDescribing
 
 
 
@@ -87,32 +87,19 @@ def main(argv):
     # Describe the images. Map the descriptions.
     tCounterCurrImage = 1
     for tFileName in mRawFileNames:
-        tDescription = mDetector.detect(join(INPUT_DIR, tFileName))
-        mImageDescriptions[tFileName] = tDescription
+        mImageDescriptions[tFileName] = ImageDescribing(join(INPUT_DIR, tFileName), mDetector, CENSORING_LABELS=CENSORING_LABELS)
         mLogger.info(f"> Describing {tCounterCurrImage}/{len(mRawFileNames)} images")
         mLogger.debug(tFileName + " " + str(mDetector.detect(join(INPUT_DIR, tFileName))))
         tCounterCurrImage += 1
 
     # Censoring and saving
     for tFileName in mRawFileNames:
-        # Filtering the labels
-        tDescription = [tDetail for tDetail in mImageDescriptions[tFileName] if (tDetail['label'] in CENSORING_LABELS)]
+        tDescription = mImageDescriptions[tFileName]
         mLogger.info(f"======== {tFileName}: {len(tDescription)} censor(s) required")
         tSourceImage = Image.open(join(INPUT_DIR, tFileName)).convert("RGBA")
-        # Censore
+        # Censor
         mLogger.info(f"| Censoring with: {CENSORING_MODE}")
-        if CENSORING_MODE == "RECTANGLE":
-            # Get a layer over the source image to draw censoring-shapes
-            tSILayer1 = ImageDraw.Draw(tSourceImage)
-            # Censoring each targeted label
-            for tDetail in tDescription:
-                ImageRectangle(tSILayer1, tDetail['box'])
-        elif CENSORING_MODE == "BLUR":
-            for tDetail in tDescription:
-                tSourceImage = ImageBlur(tSourceImage, tDetail['box'])
-        elif CENSORING_MODE == "PIXELATE":
-            for tDetail in tDescription:
-                tSourceImage = ImagePixelate(tSourceImage, tDetail['box'])
+        tSourceImage = ImageCensoring(tSourceImage, tDescription, CENSORING_MODE)
         # Saving
         mLogger.info(f"""| Saving as PNG at: {join(OUTPUT_DIR_NEW, tFileName.replace(".jpg", ".png"))}""")
         tSourceImage.save(join(OUTPUT_DIR_NEW, tFileName.replace(".jpg", ".png")), "PNG")
